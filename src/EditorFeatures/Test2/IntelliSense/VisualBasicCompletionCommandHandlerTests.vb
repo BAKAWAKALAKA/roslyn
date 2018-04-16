@@ -14,6 +14,7 @@ Imports Microsoft.VisualStudio.Text.Projection
 Imports Roslyn.Utilities
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
+    <[UseExportProvider]>
     Public Class VisualBasicCompletionCommandHandlerTests
         <WorkItem(546208, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/546208")>
         <WpfFact, Trait(Traits.Feature, Traits.Features.Completion)>

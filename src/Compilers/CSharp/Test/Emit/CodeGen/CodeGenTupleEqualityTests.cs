@@ -536,7 +536,7 @@ class C
             comp.VerifyDiagnostics();
 
             comp.VerifyIL("C.M", @"{
-  // Code size       66 (0x42)
+  // Code size       63 (0x3f)
   .maxstack  2
   .locals init (System.ValueTuple<int?, bool?> V_0,
                 int? V_1,
@@ -553,28 +553,26 @@ class C
   IL_000b:  ldloca.s   V_1
   IL_000d:  call       ""int int?.GetValueOrDefault()""
   IL_0012:  ldloc.2
-  IL_0013:  beq.s      IL_0018
-  IL_0015:  ldc.i4.0
-  IL_0016:  br.s       IL_001f
-  IL_0018:  ldloca.s   V_1
-  IL_001a:  call       ""bool int?.HasValue.get""
-  IL_001f:  brfalse.s  IL_0040
-  IL_0021:  ldloc.0
-  IL_0022:  ldfld      ""bool? System.ValueTuple<int?, bool?>.Item2""
-  IL_0027:  stloc.3
-  IL_0028:  ldc.i4.1
-  IL_0029:  stloc.s    V_4
-  IL_002b:  ldloca.s   V_3
-  IL_002d:  call       ""bool bool?.GetValueOrDefault()""
-  IL_0032:  ldloc.s    V_4
-  IL_0034:  beq.s      IL_0038
-  IL_0036:  ldc.i4.0
-  IL_0037:  ret
-  IL_0038:  ldloca.s   V_3
-  IL_003a:  call       ""bool bool?.HasValue.get""
-  IL_003f:  ret
-  IL_0040:  ldc.i4.0
-  IL_0041:  ret
+  IL_0013:  ceq
+  IL_0015:  ldloca.s   V_1
+  IL_0017:  call       ""bool int?.HasValue.get""
+  IL_001c:  and
+  IL_001d:  brfalse.s  IL_003d
+  IL_001f:  ldloc.0
+  IL_0020:  ldfld      ""bool? System.ValueTuple<int?, bool?>.Item2""
+  IL_0025:  stloc.3
+  IL_0026:  ldc.i4.1
+  IL_0027:  stloc.s    V_4
+  IL_0029:  ldloca.s   V_3
+  IL_002b:  call       ""bool bool?.GetValueOrDefault()""
+  IL_0030:  ldloc.s    V_4
+  IL_0032:  ceq
+  IL_0034:  ldloca.s   V_3
+  IL_0036:  call       ""bool bool?.HasValue.get""
+  IL_003b:  and
+  IL_003c:  ret
+  IL_003d:  ldc.i4.0
+  IL_003e:  ret
 }");
         }
 
@@ -648,13 +646,43 @@ public struct S
     public static implicit operator S(int value) { return new S() { I = value }; }
     public static bool operator==(S s1, S s2) { System.Console.Write($""{s1.I} == {s2.I}, ""); return s1.I == s2.I; }
     public static bool operator!=(S s1, S s2) { throw null; }
+    public override bool Equals(object o) { throw null; }
+    public override int GetHashCode() { throw null; }
 }";
+            var comp = CompileAndVerify(source, expectedOutput: "1 == 1, 2 == 2, True");
+            comp.VerifyDiagnostics();
+        }
 
-            // https://github.com/dotnet/roslyn/issues/25488
-            // We need to create a temp for `this`, otherwise it gets mutated
+        [Fact]
+        public void TestThisClass()
+        {
+            var source = @"
+public class C
+{
+    public int I;
+    public static void Main()
+    {
+        C c = new C() { I = 1 };
+        c.M();
+    }
+    void M()
+    {
+        System.Console.Write((this, 2) == (2, this.Mutate()));
+    }
 
-            var comp = CompileAndVerify(source, expectedOutput: "2 == 1, False");
-            //comp.VerifyDiagnostics();
+    C Mutate()
+    {
+        I++;
+        return this;
+    }
+    public static implicit operator C(int value) { return new C() { I = value }; }
+    public static bool operator==(C c1, C c2) { System.Console.Write($""{c1.I} == {c2.I}, ""); return c1.I == c2.I; }
+    public static bool operator!=(C c1, C c2) { throw null; }
+    public override bool Equals(object o) { throw null; }
+    public override int GetHashCode() { throw null; }
+}";
+            var comp = CompileAndVerify(source, expectedOutput: "2 == 2, 2 == 2, True");
+            comp.VerifyDiagnostics();
         }
 
         [Fact]

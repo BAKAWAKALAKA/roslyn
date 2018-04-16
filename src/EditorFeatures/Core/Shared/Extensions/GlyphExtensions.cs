@@ -124,7 +124,7 @@ namespace Microsoft.CodeAnalysis.Editor.Shared.Extensions
 
                 case Glyph.Parameter:
                 case Glyph.Local:
-                    return new ImageId(KnownMonikers.LocalVariable.Guid, KnownMonikers.LocalVariable.Id);
+                    return new ImageId(KnownImageIds.ImageCatalogGuid, KnownImageIds.LocalVariable);
 
                 case Glyph.Namespace:
                     return new ImageId(KnownImageIds.ImageCatalogGuid, KnownImageIds.Namespace);

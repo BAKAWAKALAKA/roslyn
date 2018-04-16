@@ -294,12 +294,23 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Return {semanticModel.GetDeclaredSymbol(memberDeclaration, cancellationToken)}
         End Function
 
-        Public Function GetSymbolInfo(semanticModel As SemanticModel, node As SyntaxNode, token As SyntaxToken, cancellationToken As CancellationToken) As SymbolInfo Implements ISemanticFactsService.GetSymbolInfo
-            Return semanticModel.GetSymbolInfo(node, cancellationToken)
+        Public Function GetBestOrAllSymbols(semanticModel As SemanticModel, node As SyntaxNode, token As SyntaxToken, cancellationToken As CancellationToken) As ImmutableArray(Of ISymbol) Implements ISemanticFactsService.GetBestOrAllSymbols
+            Return semanticModel.GetSymbolInfo(node, cancellationToken).GetBestOrAllSymbols()
         End Function
 
-        Private Function ISemanticFactsService_GenerateUniqueName(semanticModel As SemanticModel, location As SyntaxNode, containerOpt As SyntaxNode, baseName As String, cancellationToken As CancellationToken) As SyntaxToken Implements ISemanticFactsService.GenerateUniqueName
+        Private Function ISemanticFactsService_GenerateUniqueName(
+            semanticModel As SemanticModel, location As SyntaxNode, containerOpt As SyntaxNode, baseName As String, cancellationToken As CancellationToken) As SyntaxToken Implements ISemanticFactsService.GenerateUniqueName
             Return MyBase.GenerateUniqueName(semanticModel, location, containerOpt, baseName, cancellationToken)
+        End Function
+
+        Private Function ISemanticFactsService_GenerateUniqueName(
+            semanticModel As SemanticModel, location As SyntaxNode, containerOpt As SyntaxNode, baseName As String, usedNames As IEnumerable(Of String), cancellationToken As CancellationToken) As SyntaxToken Implements ISemanticFactsService.GenerateUniqueName
+            Return MyBase.GenerateUniqueName(semanticModel, location, containerOpt, baseName, usedNames, cancellationToken)
+        End Function
+
+        Private Function ISemanticFactsService_GenerateUniqueLocalName(
+            semanticModel As SemanticModel, location As SyntaxNode, containerOpt As SyntaxNode, baseName As String, cancellationToken As CancellationToken) As SyntaxToken Implements ISemanticFactsService.GenerateUniqueLocalName
+            Return MyBase.GenerateUniqueLocalName(semanticModel, location, containerOpt, baseName, cancellationToken)
         End Function
     End Class
 End Namespace

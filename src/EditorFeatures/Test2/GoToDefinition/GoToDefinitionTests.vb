@@ -1,23 +1,22 @@
 ﻿' Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 Imports System.Threading
-Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis.Editor.CSharp.GoToDefinition
 Imports Microsoft.CodeAnalysis.Editor.Host
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Utilities.GoToHelpers
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Editor.VisualBasic.GoToDefinition
 Imports Microsoft.CodeAnalysis.Navigation
-Imports Microsoft.VisualStudio.Composition
 Imports Microsoft.VisualStudio.Text
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.GoToDefinition
+    <[UseExportProvider]>
     Public Class GoToDefinitionTests
         Friend Sub Test(workspaceDefinition As XElement,
                                         expectedResult As Boolean,
                                         executeOnDocument As Func(Of Document, Integer, IEnumerable(Of Lazy(Of IStreamingFindUsagesPresenter)), Boolean))
             Using workspace = TestWorkspace.Create(
-                    workspaceDefinition, exportProvider:=GoToTestHelpers.ExportProvider)
+                    workspaceDefinition, exportProvider:=GoToTestHelpers.ExportProviderFactory.CreateExportProvider())
                 Dim solution = workspace.CurrentSolution
                 Dim cursorDocument = workspace.Documents.First(Function(d) d.CursorPosition.HasValue)
                 Dim cursorPosition = cursorDocument.CursorPosition.Value
@@ -759,6 +758,76 @@ class C
             class [|SomeClass|] 
             { 
             }]]>
+        </Document>
+    </Project>
+</Workspace>
+
+            Test(workspace)
+        End Sub
+
+        <WpfFact, Trait(Traits.Feature, Traits.Features.GoToDefinition)>
+        <WorkItem(16529, "https://github.com/dotnet/roslyn/issues/16529")>
+        Public Sub TestCSharpGoToOverriddenDefinition_FromDeconstructionDeclaration()
+            Dim workspace =
+<Workspace>
+    <Project Language="C#" CommonReferences="true">
+        <Document>
+class Two { public void Deconstruct(out int x1, out int x2) => throw null; }
+class Four { public void [|Deconstruct|](out int x1, out int x2, out Two x3) => throw null; }
+class C
+{
+    void M(Four four)
+    {
+        var (a, b, (c, d)) $$= four;
+    }
+}
+        </Document>
+    </Project>
+</Workspace>
+
+            Test(workspace)
+        End Sub
+
+        <WpfFact, Trait(Traits.Feature, Traits.Features.GoToDefinition)>
+        <WorkItem(16529, "https://github.com/dotnet/roslyn/issues/16529")>
+        Public Sub TestCSharpGoToOverriddenDefinition_FromDeconstructionAssignment()
+            Dim workspace =
+<Workspace>
+    <Project Language="C#" CommonReferences="true">
+        <Document>
+class Two { public void Deconstruct(out int x1, out int x2) => throw null; }
+class Four { public void [|Deconstruct|](out int x1, out int x2, out Two x3) => throw null; }
+class C
+{
+    void M(Four four)
+    {
+        int i;
+        (i, i, (i, i)) $$= four;
+    }
+}
+        </Document>
+    </Project>
+</Workspace>
+
+            Test(workspace)
+        End Sub
+
+        <WpfFact, Trait(Traits.Feature, Traits.Features.GoToDefinition)>
+        <WorkItem(16529, "https://github.com/dotnet/roslyn/issues/16529")>
+        Public Sub TestCSharpGoToOverriddenDefinition_FromDeconstructionForeach()
+            Dim workspace =
+<Workspace>
+    <Project Language="C#" CommonReferences="true">
+        <Document>
+class Two { public void Deconstruct(out int x1, out int x2) => throw null; }
+class Four { public void [|Deconstruct|](out int x1, out int x2, out Two x3) => throw null; }
+class C
+{
+    void M(Four four)
+    {
+        foreach (var (a, b, (c, d)) $$in new[] { four }) { }
+    }
+}
         </Document>
     </Project>
 </Workspace>
